@@ -1,0 +1,4 @@
+radius_max_wind,radius_oci,max_sustained_wind,central_pressure,environmental_pressure,time_step,basin,lon,lat,on_land,dist_since_lf
+0.0,0.0,75.0,980.0,1010.0,1.0,NA,-85.5,29.600000381469727,False,
+0.0,0.0,75.0,980.0,1010.0,1.0,NA,-85.4000015258789,29.65000057220459,False,
+0.0,0.0,75.0,980.0,1010.0,1.0,NA,-85.30000305175781,29.700000762939453,True,5.572761192679257
