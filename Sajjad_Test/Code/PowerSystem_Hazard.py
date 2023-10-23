@@ -23,7 +23,7 @@ from climada.hazard import TropCyclone, Centroids
 
 # storm information
 data_provider = 'usa'       # set the data provider "usa" for default
-start_year = 1922           # start year in the range of years from which the hurricane data is required
+start_year = 1992           # start year in the range of years from which the hurricane data is required
 end_year = 2022             # end year in the range of years from which the hurricane data is required
 sub_basin = 'GM'            # can provide basin or sub-basin. Here, 'GM' refers to the gulf of mexico
 storm_id = '2017228N14314'  # For a specific hurricane
