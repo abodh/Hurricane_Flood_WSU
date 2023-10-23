@@ -1,3 +1,19 @@
+"""
+Author: Sajjad Uddin Mahmud, WSU
+
+This code is to get the aggregated MEOWs (Maximum Elevation of Water) levels from SLOSH Display Program (SDP) output at different basins.
+
+Input: User will provide storm_id, category, direction, translational speed, tide level and basin.
+Output: .csv files for each basin, contains MEOW levels gathered from SDP output files, also provides average and maximum MEOW level for the given combination.
+
+"""
+
+
+
+# =============================================================================
+# LIBRARIES
+# =============================================================================
+
 import os
 import numpy as np
 import pandas as pd
@@ -28,7 +44,7 @@ category = 1  # category = 0, 1, 2, 3, 4, 5
 speed = ['15']  # forward speed = '05', '10', '15', '25'
 direction = ['wnw', 'w']  # directions = 'ene', 'ne', 'nne', 'n', 'nnw', 'nw', 'wnw', 'w', 'wsw'
 tide_level = ['mean', 'high']  # tide level = 'mean', 'high'
-basin = ['Sabine', 'Galveston', 'Matagorda', 'Corpus', 'Laguna']  # texas basins = 'Sabine' , 'Galveston', 'Matagorda', 'Corpus', 'Laguna'
+basin = ['Sabine', 'Galveston', 'Matagorda', 'Corpus', 'Laguna']  # texas basins = 'Sabine' , 'Galveston', 'Matagorda', 'Corpus', 'Laguna', user can choose one or multiple as list format
 
 # =============================================================================
 # CREATING RESULTS FOLDER
@@ -78,7 +94,7 @@ for b in range(len(basin)):
         for s in range(len(speed)):
             for t in range(len(tide_level)):
 
-                # setting tide level code
+                # setting tide level code: tide level code as per SDP = i0:mean, i2:high except Galveston where i1:mean
                 if (basin == 'Galveston' and tide_level[t] == 'mean'):
                     tide_level_code = 'i1'
                 elif (tide_level[t] == 'mean'):
