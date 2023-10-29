@@ -1,3 +1,4 @@
 **/prior_results
 pop_study
 *.png
+.ipynb_checkpoints
