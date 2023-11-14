@@ -39,10 +39,10 @@ surgedata_folderpath = os.path.join(data_folderpath, 'SloshSurge')
 # =============================================================================
 # USER INPUT
 # =============================================================================
-storm_id = '2003188N11307'
+storm_id = 'CLAUDETTE'
 category = 1  # category = 0, 1, 2, 3, 4, 5
 speed = ['15']  # forward speed = '05', '10', '15', '25'
-direction = ['wnw', 'w']  # directions = 'ene', 'ne', 'nne', 'n', 'nnw', 'nw', 'wnw', 'w', 'wsw'
+direction = ['nw', 'wnw', 'w']  # directions = 'ene', 'ne', 'nne', 'n', 'nnw', 'nw', 'wnw', 'w', 'wsw'
 tide_level = ['mean', 'high']  # tide level = 'mean', 'high'
 basin = ['Sabine', 'Galveston', 'Matagorda', 'Corpus', 'Laguna']  # texas basins = 'Sabine' , 'Galveston', 'Matagorda', 'Corpus', 'Laguna', user can choose one or multiple as list format
 
@@ -53,8 +53,8 @@ basin = ['Sabine', 'Galveston', 'Matagorda', 'Corpus', 'Laguna']  # texas basins
 result_folderpath = os.path.join(workplace_folderpath, 'Results')
 
 # result folder name
-surge_aggregation_foldername = 'Surge_Aggregation'
-surge_foldername = storm_id + '_surge'
+surge_aggregation_foldername = 'Surge_Aggregation_PESGM'
+surge_foldername = storm_id
 
 # checking if folders exist, if not create folders
 if (os.path.isdir(os.path.join(result_folderpath, surge_aggregation_foldername))):
@@ -133,14 +133,19 @@ for b in range(len(basin)):
                     continue
 
 
+    # replacing all garbage value (99.9) with zero to calculate average and maximum depth
+    output_surge_df = output_surge_df.mask(output_surge_df == 99.9, 0)
+
     # calculating the average and maximum surge depth
-    Depth_avg = (output_surge_df.iloc[:,4:]).mean(axis=1)
-    Depth_max = (output_surge_df.iloc[:,4:]).max(axis=1)
+    Depth_avg = (output_surge_df.iloc[:, 4:]).mean(axis=1)
+    Depth_max = (output_surge_df.iloc[:, 4:]).max(axis=1)
 
     # appending average and maximum depth data into output_surge_df
     output_surge_df['Depth_avg'] = Depth_avg
     output_surge_df['Depth_max'] = Depth_max
 
+    # replacing all zero with 99.9 to recreate the original form
+    output_surge_df.iloc[:, 4:] = (output_surge_df.iloc[:, 4:]).mask(output_surge_df == 0, 99.9)
 
     # =============================================================================
     # SAVING OUTPUT FILES
