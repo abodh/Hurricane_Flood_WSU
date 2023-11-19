@@ -69,10 +69,11 @@ def plot(county_data, pl_scale):
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
         counties = json.load(response)
     fig=px.choropleth(county_data,geojson=counties,
-                      locations=county_data.index,
-                      color=county_data,labels={'color':'% Vulnerability'},
+                      locations=county_data.index,color=county_data,
+                      labels={'color':'% Vulnerability'},
                       color_continuous_scale=pl_scale)
-    fig.update_geos(fitbounds="locations", visible=True)
+    fig.update_geos(fitbounds="locations", scope='usa',visible=True)
+    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     fig.show()
 
 load_loss = scipy.io.loadmat("hurricane_load_loss.mat")
