@@ -1,11 +1,9 @@
 import numpy as np
 import pandas as pd
 import scipy.io
-import plotly.figure_factory as ff
-import math
 import json
 import plotly.express as px
-
+from urllib.request import urlopen
 
 # function process_load_data: processes the city-level data, removes unwanted features, converts it to county level.
 # does this for both the load loss per city and load demand per city.
@@ -66,18 +64,16 @@ def process_load_data(city_load, keyphrase):
 
 
 # function plot: plots county level data of ERCOT region.
-def plot(county_data, title):
-    colorscale = ["white","#A0D2E7", "#81B1D5", "#3D60A7", "#26408B", "#0F084B", "black"]
-    endpts = list(np.linspace(0, 100, len(colorscale) - 1))
+def plot(county_data, pl_scale):
     county_data.dropna(inplace=True)  # drop nan values (no data for given county)
-    county_data.replace(to_replace=0.0, value=0.0001,inplace=True)  # change any 0 outages to 0.001 - this fixes the graph legend
-    fig = ff.create_choropleth(fips=county_data.index, values=county_data, colorscale=colorscale, scope=['TX'],
-                               binning_endpoints=endpts,
-                               title=title, legend_title='% Vulnerability',
-                               county_outline={'color': 'rgb(0,0,0)', 'width': 0.5},
-                               state_outline={'color': 'rgb(0,0,0)', 'width': 0.75})
+    with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
+        counties = json.load(response)
+    fig=px.choropleth(county_data,geojson=counties,
+                      locations=county_data.index,
+                      color=county_data,labels={'color':'% Vulnerability'},
+                      color_continuous_scale=pl_scale)
+    fig.update_geos(fitbounds="locations", visible=True)
     fig.show()
-
 
 load_loss = scipy.io.loadmat("hurricane_load_loss.mat")
 keyphrase = 'load_loss'
@@ -91,15 +87,13 @@ theme_5 = theme_5.astype(float)*100
 # # map theme 5
 theme_5=theme_5.sort_index()
 total_fips.sort()
-title = "Outage Vulnerability Index from Hurricanes in ERCOT"
-plot(theme_5, title)
+plot(theme_5, "PuBu")
 # # read in SVI info. Plot with social vulnerability
 SVI_Texas = pd.read_csv('texas_2016_svi.csv')
 county_SVI = SVI_Texas['RPL_THEMES']*100
 county_SVI.index = SVI_Texas['FIPS']
 theme_5 = county_load_loss / county_demand
 modified_SVI = theme_5*0.2+county_SVI*0.8
-title = "Integrated Community Vulnerability Index from Hurricanes in ERCOT"
-plot(modified_SVI, title)
+plot(modified_SVI, "Greens")
 
 print("done")
