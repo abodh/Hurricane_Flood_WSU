@@ -4,7 +4,7 @@ import scipy.io
 import json
 import plotly.express as px
 from urllib.request import urlopen
-
+import geopandas as gpd
 # function process_load_data: processes the city-level data, removes unwanted features, converts it to county level.
 # does this for both the load loss per city and load demand per city.
 # INPUT: matfile from 2000-bus system loss containing load in MW per zip code
@@ -66,14 +66,17 @@ def process_load_data(city_load, keyphrase):
 # function plot: plots county level data of ERCOT region.
 def plot(county_data, pl_scale):
     county_data.dropna(inplace=True)  # drop nan values (no data for given county)
-    with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
-        counties = json.load(response)
-    fig=px.choropleth(county_data,geojson=counties,
+    with open('texas-with-county-boundaries_1126.geojson') as poo:
+        state_outline=json.load(poo)
+    fig=px.choropleth(county_data,geojson=state_outline,
                       locations=county_data.index,color=county_data,
                       labels={'color':'% Vulnerability'},
                       color_continuous_scale=pl_scale)
-    fig.update_geos(fitbounds="locations", scope='usa',visible=True)
-    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    fig.update_geos(fitbounds="locations",
+                    visible=True,showocean=True,oceancolor='lightblue')
+    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0},
+                      plot_bgcolor='rgba(0, 0, 0, 0)',
+                      coloraxis_colorbar_title_side="right")
     fig.show()
 
 load_loss = scipy.io.loadmat("hurricane_load_loss.mat")
@@ -82,19 +85,28 @@ county_load_loss, total_fips = process_load_data(load_loss,keyphrase)
 expected_load = scipy.io.loadmat("hurricane_expected_load.mat")
 keyphrase = 'total_load'
 county_demand, total_fips = process_load_data(expected_load,keyphrase)
-# # county theme 5 - load loss/total load
-theme_5 = county_load_loss / county_demand
-theme_5 = theme_5.astype(float)*100
-# # map theme 5
-theme_5=theme_5.sort_index()
+# # county theme 5 - load loss/total load. Percentile rank per county.
+theme_5_base = county_load_loss / county_demand
+theme_5_base = theme_5_base.astype(float)*100
+theme_5_base=theme_5_base.sort_index()
+pct=theme_5_base.to_frame()
+theme_5 = pct.loc[:,0].rank(pct=True)
 total_fips.sort()
-plot(theme_5, "PuBu")
-# # read in SVI info. Plot with social vulnerability
-SVI_Texas = pd.read_csv('texas_2016_svi.csv')
-county_SVI = SVI_Texas['RPL_THEMES']*100
-county_SVI.index = SVI_Texas['FIPS']
-theme_5 = county_load_loss / county_demand
-modified_SVI = theme_5*0.2+county_SVI*0.8
-plot(modified_SVI, "Greens")
+# Plot Outage Vulnerability
+plot(theme_5, "deep")
+# Plot Social Vulnerability
+SVI_Texas = pd.read_csv('Texas_county_svi_2020.csv')
+SVI = SVI_Texas['RPL_THEMES'].squeeze()
+SVI.index=SVI_Texas['FIPS']
+SVI=pd.Series(SVI)
+plot(SVI, "deep")
+SPL_themes = SVI_Texas['SPL_THEMES']
+SPL_themes.index = SVI_Texas['FIPS']
+SPL_themes=(SPL_themes - SPL_themes.min()) / (SPL_themes.max() - SPL_themes.min())
+norm_theme5=(theme_5_base- theme_5_base.min()) / (theme_5_base.max() - theme_5_base.min())
+# Plot Integrated Community Vulnerability
+total_SPL_themes = (norm_theme5+SPL_themes).to_frame()
+ICVI=total_SPL_themes.loc[:,0].rank(pct=True)
+plot(ICVI, "deep")
 
 print("done")
